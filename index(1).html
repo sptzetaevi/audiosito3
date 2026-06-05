@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Audio storie sociali</title>
+  <style>
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #111827;
+      color: white;
+      font-family: Arial, sans-serif;
+      user-select: none;
+      touch-action: manipulation;
+    }
+
+    #app {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 28px;
+      box-sizing: border-box;
+    }
+
+    .testo {
+      max-width: 760px;
+      font-size: clamp(24px, 5vw, 46px);
+      line-height: 1.25;
+      font-weight: bold;
+    }
+
+    .sotto {
+      display: block;
+      margin-top: 22px;
+      font-size: clamp(16px, 3vw, 24px);
+      font-weight: normal;
+      opacity: 0.85;
+    }
+
+    .angolo {
+      position: fixed;
+      width: 50vw;
+      height: 50vh;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 18px;
+      box-sizing: border-box;
+      border: 2px dashed rgba(255,255,255,.25);
+      background: rgba(255,255,255,.04);
+      font-size: clamp(20px, 4vw, 34px);
+      font-weight: bold;
+    }
+
+    body.menu .angolo {
+      display: flex;
+    }
+
+    #altoSinistra { top: 0; left: 0; }
+    #altoDestra { top: 0; right: 0; }
+    #bassoSinistra { bottom: 0; left: 0; }
+    #bassoDestra { bottom: 0; right: 0; }
+
+    #avvio {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      background: #111827;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 30px;
+      box-sizing: border-box;
+    }
+
+    #avvio.nascosto {
+      display: none;
+    }
+
+    #stato {
+      position: fixed;
+      left: 8px;
+      right: 8px;
+      bottom: 8px;
+      text-align: center;
+      font-size: 13px;
+      opacity: .65;
+      pointer-events: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="avvio">
+    <div class="testo">
+      Tocca lo schermo per avviare
+      <span class="sotto">Serve solo se il browser blocca l’avvio automatico dell’audio.</span>
+    </div>
+  </div>
+
+  <div id="app">
+    <div class="testo" id="testo">
+      Audio storie sociali
+      <span class="sotto">Clic: pausa/riprendi. Doppio clic: ricomincia o torna al menù.</span>
+    </div>
+  </div>
+
+  <div class="angolo" id="altoSinistra"></div>
+  <div class="angolo" id="altoDestra"></div>
+  <div class="angolo" id="bassoSinistra"></div>
+  <div class="angolo" id="bassoDestra"></div>
+
+  <div id="stato"></div>
+
+  <audio id="player" preload="auto" playsinline></audio>
+
+  <script>
+    /*
+      IMPORTANTE
+      Questo file index.html deve stare nella stessa cartella degli audio.
+      I nomi sotto devono essere uguali ai nomi dei file nella cartella GitHub.
+      Se Windows nasconde ".mp3", nel codice va comunque scritto ".mp3".
+    */
+
+    const AUDIO = {
+      ingresso: "presentazionesito.mp3",
+
+      introStoria: "intro_storiasociale.mp3",
+      chiusura: "chiusurastoriasociale.mp3",
+
+      cinema: "VIDEO CINEMA.mp3",
+      pizzeria: "AUDIO PIZZERIA.mp3",
+      bar: "AUDIO STORIA BAR.mp3",
+
+      menuSuccessivo: "storie panetteria,pizz...mp3"
+    };
+
+    const player = document.getElementById("player");
+    const testo = document.getElementById("testo");
+    const avvio = document.getElementById("avvio");
+    const stato = document.getElementById("stato");
+
+    const altoSinistra = document.getElementById("altoSinistra");
+    const altoDestra = document.getElementById("altoDestra");
+    const bassoSinistra = document.getElementById("bassoSinistra");
+    const bassoDestra = document.getElementById("bassoDestra");
+
+    let modalita = "attesa"; 
+    let playlist = [];
+    let indice = 0;
+    let menuCorrente = "principale";
+    let menuPrecedente = "principale";
+    let timerClick = null;
+    let ultimaStoria = null;
+
+    function scrivi(titolo, sottotitolo = "") {
+      testo.innerHTML = titolo + (sottotitolo ? `<span class="sotto">${sottotitolo}</span>` : "");
+    }
+
+    function aggiornaStato(messaggio) {
+      stato.textContent = messaggio || "";
+    }
+
+    function nascondiAvvio() {
+      avvio.classList.add("nascosto");
+    }
+
+    function mostraAvvio() {
+      avvio.classList.remove("nascosto");
+    }
+
+    function nascondiMenu() {
+      document.body.classList.remove("menu");
+    }
+
+    function mostraMenu(nomeMenu) {
+      modalita = "menu";
+      menuCorrente = nomeMenu;
+      nascondiAvvio();
+      document.body.classList.add("menu");
+
+      if (nomeMenu === "principale") {
+        scrivi("Scegli una storia sociale", "Usa i quattro angoli dello schermo.");
+
+        altoSinistra.textContent = "Cinema";
+        altoDestra.textContent = "Pizzeria";
+        bassoDestra.textContent = "Bar";
+        bassoSinistra.textContent = "Altre storie";
+      }
+
+      if (nomeMenu === "fineStoria") {
+        scrivi("La storia sociale è terminata", "Scegli cosa fare. Doppio clic: termina l’esperienza.");
+
+        altoSinistra.textContent = "Menù cinema, pizzeria e bar";
+        altoDestra.textContent = "Storie 4 e 5";
+        bassoDestra.textContent = "Storie 6 e 7";
+        bassoSinistra.textContent = "Riascolta questa storia";
+      }
+
+      if (nomeMenu === "successivo") {
+        scrivi("Menù successivo", "I pulsanti sono attivi, ma alcuni non sono ancora collegati.");
+
+        altoSinistra.textContent = "Non collegato";
+        altoDestra.textContent = "Non collegato";
+        bassoDestra.textContent = "Torna al menù precedente";
+        bassoSinistra.textContent = "Non collegato";
+      }
+
+      aggiornaStato("Menù attivo: " + nomeMenu);
+    }
+
+    function avviaPlaylist(lista, opzioni = {}) {
+      nascondiMenu();
+      modalita = "riproduzione";
+      playlist = lista;
+      indice = 0;
+      menuPrecedente = opzioni.menuPrecedente || menuCorrente || "principale";
+
+      if (opzioni.memorizzaStoria) {
+        ultimaStoria = lista;
+      }
+
+      scrivi(
+        opzioni.titolo || "Riproduzione audio",
+        lista.length === 3
+          ? "Clic: pausa/riprendi. Doppio clic: torna al menù precedente."
+          : "Clic: pausa/riprendi. Doppio clic: ricomincia."
+      );
+
+      riproduciAudioCorrente();
+    }
+
+    function riproduciAudioCorrente() {
+      if (!playlist.length) return;
+
+      player.pause();
+      player.src = playlist[indice];
+      player.currentTime = 0;
+      player.load();
+
+      const promessa = player.play();
+
+      if (promessa !== undefined) {
+        promessa.then(() => {
+          nascondiAvvio();
+          aggiornaStato("Audio " + (indice + 1) + " di " + playlist.length);
+        }).catch(() => {
+          mostraAvvio();
+          aggiornaStato("Avvio automatico bloccato: tocca lo schermo.");
+        });
+      }
+    }
+
+    player.addEventListener("ended", () => {
+      if (modalita !== "riproduzione") return;
+
+      indice++;
+
+      if (indice < playlist.length) {
+        riproduciAudioCorrente();
+        return;
+      }
+
+      if (playlist.length === 1 && playlist[0] === AUDIO.ingresso) {
+        mostraMenu("principale");
+        return;
+      }
+
+      if (playlist.length === 1 && playlist[0] === AUDIO.menuSuccessivo) {
+        mostraMenu("successivo");
+        return;
+      }
+
+      mostraMenu("fineStoria");
+    });
+
+    player.addEventListener("error", () => {
+      mostraAvvio();
+      scrivi(
+        "Audio non trovato",
+        "Controlla che il nome del file nel codice sia identico al nome del file nella cartella."
+      );
+      aggiornaStato("File non caricato: " + player.src);
+    });
+
+    function pausaRiprendi() {
+      if (modalita !== "riproduzione") return;
+
+      if (player.paused) {
+        player.play().catch(() => mostraAvvio());
+      } else {
+        player.pause();
+        aggiornaStato("Audio in pausa");
+      }
+    }
+
+    function ricominciaAudio() {
+      if (modalita !== "riproduzione") return;
+      player.currentTime = 0;
+      player.play().catch(() => mostraAvvio());
+    }
+
+    function tornaMenuPrecedente() {
+      player.pause();
+      mostraMenu(menuPrecedente || "principale");
+    }
+
+    function terminaEsperienza() {
+      player.pause();
+      nascondiMenu();
+      nascondiAvvio();
+      modalita = "terminata";
+      scrivi("Esperienza terminata", "Puoi chiudere questa pagina.");
+      aggiornaStato("");
+    }
+
+    function doppioClick() {
+      if (modalita === "riproduzione") {
+        if (playlist.length === 3) {
+          tornaMenuPrecedente();
+        } else {
+          ricominciaAudio();
+        }
+        return;
+      }
+
+      if (modalita === "menu" && menuCorrente === "fineStoria") {
+        terminaEsperienza();
+      }
+    }
+
+    function clickSingolo() {
+      if (modalita === "riproduzione") {
+        pausaRiprendi();
+      }
+    }
+
+    document.body.addEventListener("click", (evento) => {
+      if (evento.target.classList.contains("angolo")) return;
+      if (evento.target.closest("#avvio")) return;
+
+      if (timerClick) {
+        clearTimeout(timerClick);
+        timerClick = null;
+        doppioClick();
+      } else {
+        timerClick = setTimeout(() => {
+          timerClick = null;
+          clickSingolo();
+        }, 260);
+      }
+    });
+
+    avvio.addEventListener("click", (evento) => {
+      evento.stopPropagation();
+
+      if (modalita === "attesa") {
+        avviaPlaylist([AUDIO.ingresso], { titolo: "Audio di ingresso" });
+      } else if (modalita === "riproduzione") {
+        player.play().then(nascondiAvvio).catch(() => mostraAvvio());
+      }
+    });
+
+    altoSinistra.addEventListener("click", (evento) => {
+      evento.stopPropagation();
+
+      if (menuCorrente === "principale") {
+        avviaPlaylist([AUDIO.introStoria, AUDIO.cinema, AUDIO.chiusura], {
+          titolo: "Storia sociale ambientata al cinema",
+          menuPrecedente: "principale",
+          memorizzaStoria: true
+        });
+        return;
+      }
+
+      if (menuCorrente === "fineStoria") {
+        mostraMenu("principale");
+      }
+    });
+
+    altoDestra.addEventListener("click", (evento) => {
+      evento.stopPropagation();
+
+      if (menuCorrente === "principale") {
+        avviaPlaylist([AUDIO.introStoria, AUDIO.pizzeria, AUDIO.chiusura], {
+          titolo: "Storia sociale ambientata in pizzeria",
+          menuPrecedente: "principale",
+          memorizzaStoria: true
+        });
+        return;
+      }
+
+      if (menuCorrente === "fineStoria") {
+        scrivi("Storie 4 e 5", "Funzione abilitata, ma non ancora collegata.");
+      }
+    });
+
+    bassoDestra.addEventListener("click", (evento) => {
+      evento.stopPropagation();
+
+      if (menuCorrente === "principale") {
+        avviaPlaylist([AUDIO.introStoria, AUDIO.bar, AUDIO.chiusura], {
+          titolo: "Storia sociale ambientata al bar",
+          menuPrecedente: "principale",
+          memorizzaStoria: true
+        });
+        return;
+      }
+
+      if (menuCorrente === "fineStoria") {
+        scrivi("Storie 6 e 7", "Funzione abilitata, ma non ancora collegata.");
+        return;
+      }
+
+      if (menuCorrente === "successivo") {
+        mostraMenu("principale");
+      }
+    });
+
+    bassoSinistra.addEventListener("click", (evento) => {
+      evento.stopPropagation();
+
+      if (menuCorrente === "principale") {
+        avviaPlaylist([AUDIO.menuSuccessivo], {
+          titolo: "Menù successivo",
+          menuPrecedente: "principale"
+        });
+        return;
+      }
+
+      if (menuCorrente === "fineStoria" && ultimaStoria) {
+        avviaPlaylist(ultimaStoria, {
+          titolo: "Riascolto della storia sociale",
+          menuPrecedente: "fineStoria",
+          memorizzaStoria: true
+        });
+      }
+    });
+
+    window.addEventListener("load", () => {
+      avviaPlaylist([AUDIO.ingresso], { titolo: "Audio di ingresso" });
+    });
+  </script>
+</body>
+</html>
