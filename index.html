@@ -3,9 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Audio storie sociali</title>
   <style>
     html, body { margin:0; width:100%; height:100%; overflow:hidden; background:#111827; color:white; font-family:Arial,sans-serif; user-select:none; touch-action:manipulation; }
+    html:fullscreen, body:fullscreen { width:100%; height:100%; background:#111827; }
+    html:-webkit-full-screen, body:-webkit-full-screen { width:100%; height:100%; background:#111827; }
     #app { position:fixed; inset:0; display:flex; justify-content:center; align-items:center; text-align:center; padding:28px; box-sizing:border-box; }
     .testo { max-width:760px; font-size:clamp(24px,5vw,46px); line-height:1.25; font-weight:bold; }
     .sotto { display:block; margin-top:22px; font-size:clamp(16px,3vw,24px); font-weight:normal; opacity:.85; }
@@ -18,7 +23,7 @@
   </style>
 </head>
 <body>
-  <div id="avvio"><div class="testo">Tocca per iniziare<span class="sotto">Al primo tocco partirà l'audio e, se il dispositivo lo permette, la pagina passerà a schermo intero.</span></div></div>
+  <div id="avvio"><div class="testo">Tocca per iniziare<span class="sotto">Al primo tocco la pagina proverà ad aprirsi a schermo intero e partirà l'audio.</span></div></div>
   <div id="app"><div class="testo" id="testo">Audio storie sociali<span class="sotto">Clic: pausa/riprendi. Doppio clic: ricomincia o torna al menù.</span></div></div>
   <div class="angolo" id="altoSinistra"></div><div class="angolo" id="altoDestra"></div><div class="angolo" id="bassoSinistra"></div><div class="angolo" id="bassoDestra"></div>
   <div id="stato"></div>
@@ -61,12 +66,25 @@ function nascondiAvvio() { avvio.classList.add("nascosto"); }
 function mostraAvvio() { avvio.classList.remove("nascosto"); }
 function nascondiMenu() { document.body.classList.remove("menu"); }
 
-function entraInFullscreen() {
+async function entraInFullscreen() {
   const el = document.documentElement;
-  if (document.fullscreenElement) return;
-  if (el.requestFullscreen) el.requestFullscreen().catch(() => {});
-  else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
-  else if (el.msRequestFullscreen) el.msRequestFullscreen();
+  const giaFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
+  if (giaFullscreen) return true;
+
+  try {
+    if (el.requestFullscreen) await el.requestFullscreen({ navigationUI: "hide" });
+    else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+    else if (el.msRequestFullscreen) el.msRequestFullscreen();
+
+    if (screen.orientation && screen.orientation.lock) {
+      screen.orientation.lock("portrait").catch(() => {});
+    }
+    aggiornaStato("Schermo intero attivato");
+    return true;
+  } catch (errore) {
+    aggiornaStato("Schermo intero non consentito da questo browser: continua comunque a schermo normale.");
+    return false;
+  }
 }
 
 function mostraMenu(nomeMenu) {
@@ -198,6 +216,13 @@ document.body.addEventListener("click", (evento) => {
     }, 260);
   }
 });
+
+avvio.addEventListener("pointerdown", () => {
+  if (!primoToccoEffettuato) {
+    primoToccoEffettuato = true;
+    entraInFullscreen();
+  }
+}, { once:true });
 
 avvio.addEventListener("click", (evento) => {
   evento.stopPropagation();
