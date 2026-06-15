@@ -2,13 +2,16 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#111827">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Audio storie sociali</title>
   <style>
-    html, body { margin:0; width:100%; height:100%; overflow:hidden; background:#111827; color:white; font-family:Arial,sans-serif; user-select:none; touch-action:manipulation; }
+    html, body { margin:0; width:100%; min-height:100%; overflow:hidden; background:#111827; color:white; font-family:Arial,sans-serif; user-select:none; touch-action:manipulation; }
+    body { height:100vh; height:100dvh; }
+    body.modalita-app { position:fixed; inset:0; width:100vw; height:100vh; height:100dvh; overscroll-behavior:none; }
     html:fullscreen, body:fullscreen { width:100%; height:100%; background:#111827; }
     html:-webkit-full-screen, body:-webkit-full-screen { width:100%; height:100%; background:#111827; }
     #app { position:fixed; inset:0; display:flex; justify-content:center; align-items:center; text-align:center; padding:28px; box-sizing:border-box; }
@@ -23,13 +26,14 @@
   </style>
 </head>
 <body>
-  <div id="avvio"><div class="testo">Tocca per iniziare<span class="sotto">Al primo tocco la pagina proverà ad aprirsi a schermo intero e partirà l'audio.</span></div></div>
+  <div id="avvio"><div class="testo">Tocca per iniziare<span class="sotto">Al primo tocco la pagina prova lo schermo intero. Se il browser lo blocca, apre una finestra dedicata e usa la modalità app.</span></div></div>
   <div id="app"><div class="testo" id="testo">Audio storie sociali<span class="sotto">Clic: pausa/riprendi. Doppio clic: ricomincia o torna al menù.</span></div></div>
   <div class="angolo" id="altoSinistra"></div><div class="angolo" id="altoDestra"></div><div class="angolo" id="bassoSinistra"></div><div class="angolo" id="bassoDestra"></div>
   <div id="stato"></div>
   <audio id="player" preload="auto" playsinline></audio>
 
 <script>
+attivaModalitaApp();
 const AUDIO = {
   ingresso: "presentazionesito.mp3",
   introStoria: "intro_storiasociale.mp3",
@@ -57,6 +61,31 @@ let menuPrecedente = "principale";
 let timerClick = null;
 let ultimaStoria = null;
 let primoToccoEffettuato = false;
+let tentatoPopup = new URLSearchParams(location.search).has("schermointero");
+
+function attivaModalitaApp() {
+  document.body.classList.add("modalita-app");
+  // Su mobile alcuni browser nascondono la barra indirizzi solo dopo uno scroll.
+  setTimeout(() => window.scrollTo(0, 1), 50);
+  setTimeout(() => window.scrollTo(0, 1), 400);
+}
+
+function provaPopupSchermoIntero() {
+  if (tentatoPopup) return false;
+  tentatoPopup = true;
+  const url = location.href.split("?")[0].split("#")[0] + "?schermointero=1";
+  const larghezza = screen.availWidth || screen.width || window.innerWidth;
+  const altezza = screen.availHeight || screen.height || window.innerHeight;
+  const caratteristiche = `popup=yes,fullscreen=yes,location=no,menubar=no,toolbar=no,status=no,scrollbars=no,resizable=yes,left=0,top=0,width=${larghezza},height=${altezza}`;
+  const finestra = window.open(url, "audio_storie_fullscreen", caratteristiche);
+  if (finestra) {
+    finestra.focus();
+    aggiornaStato("Ho aperto una finestra dedicata quasi a schermo intero.");
+    return true;
+  }
+  return false;
+}
+
 
 function scrivi(titolo, sottotitolo = "") {
   testo.innerHTML = titolo + (sottotitolo ? `<span class="sotto">${sottotitolo}</span>` : "");
@@ -67,6 +96,7 @@ function mostraAvvio() { avvio.classList.remove("nascosto"); }
 function nascondiMenu() { document.body.classList.remove("menu"); }
 
 async function entraInFullscreen() {
+  attivaModalitaApp();
   const el = document.documentElement;
   const giaFullscreen = document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement;
   if (giaFullscreen) return true;
@@ -82,7 +112,10 @@ async function entraInFullscreen() {
     aggiornaStato("Schermo intero attivato");
     return true;
   } catch (errore) {
-    aggiornaStato("Schermo intero non consentito da questo browser: continua comunque a schermo normale.");
+    const aperta = provaPopupSchermoIntero();
+    if (!aperta) {
+      aggiornaStato("Il browser non consente il fullscreen automatico. Modalità app attiva.");
+    }
     return false;
   }
 }
