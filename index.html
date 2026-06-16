@@ -33,6 +33,7 @@ const AUDIO = {
   menuPrincipaleAudio: "cinema,panetteria e bar_menu.mp3",
   menuTrenoPizzeria: "treno e pizzeria_menu.mp3",
   menuCastelloMedico: "castello e medico_menu.mp3",
+  // introStoria rimosso dalle storie: i quadranti avviano direttamente il file scelto.
   introStoria: "intro_storiasociale.mp3",
   chiusura: "chiusurastoriasociale.mp3",
   cinema: "VIDEO CINEMA.mp3",
@@ -210,7 +211,7 @@ altoSinistra.addEventListener("click", (evento) => {
   evento.stopPropagation();
 
   if (menuCorrente === "principale") {
-    avviaPlaylist([AUDIO.introStoria, AUDIO.cinema, AUDIO.chiusura], {
+    avviaPlaylist([AUDIO.cinema, AUDIO.chiusura], {
       titolo:"Storia sociale del cinema",
       menuPrecedente:"principale",
       memorizzaStoria:true
@@ -219,7 +220,7 @@ altoSinistra.addEventListener("click", (evento) => {
   }
 
   if (menuCorrente === "castelloMedico") {
-    avviaPlaylist([AUDIO.introStoria, AUDIO.castello, AUDIO.chiusura], {
+    avviaPlaylist([AUDIO.castello, AUDIO.chiusura], {
       titolo:"Storia sociale del castello",
       menuPrecedente:"castelloMedico",
       memorizzaStoria:true
@@ -228,7 +229,7 @@ altoSinistra.addEventListener("click", (evento) => {
   }
 
   if (menuCorrente === "trenoPizzeria") {
-    avviaPlaylist([AUDIO.introStoria, AUDIO.treno, AUDIO.chiusura], {
+    avviaPlaylist([AUDIO.treno, AUDIO.chiusura], {
       titolo:"Storia sociale del treno",
       menuPrecedente:"trenoPizzeria",
       memorizzaStoria:true
@@ -248,7 +249,7 @@ altoDestra.addEventListener("click", (evento) => {
   evento.stopPropagation();
 
   if (menuCorrente === "principale") {
-    avviaPlaylist([AUDIO.introStoria, AUDIO.panetteria, AUDIO.chiusura], {
+    avviaPlaylist([AUDIO.panetteria, AUDIO.chiusura], {
       titolo:"Storia sociale della panetteria",
       menuPrecedente:"principale",
       memorizzaStoria:true
@@ -257,7 +258,7 @@ altoDestra.addEventListener("click", (evento) => {
   }
 
   if (menuCorrente === "castelloMedico") {
-    avviaPlaylist([AUDIO.introStoria, AUDIO.medico, AUDIO.chiusura], {
+    avviaPlaylist([AUDIO.medico, AUDIO.chiusura], {
       titolo:"Storia sociale del medico",
       menuPrecedente:"castelloMedico",
       memorizzaStoria:true
@@ -266,7 +267,7 @@ altoDestra.addEventListener("click", (evento) => {
   }
 
   if (menuCorrente === "trenoPizzeria") {
-    avviaPlaylist([AUDIO.introStoria, AUDIO.pizzeria, AUDIO.chiusura], {
+    avviaPlaylist([AUDIO.pizzeria, AUDIO.chiusura], {
       titolo:"Storia sociale della pizzeria",
       menuPrecedente:"trenoPizzeria",
       memorizzaStoria:true
@@ -286,7 +287,7 @@ bassoDestra.addEventListener("click", (evento) => {
   evento.stopPropagation();
 
   if (menuCorrente === "principale") {
-    avviaPlaylist([AUDIO.introStoria, AUDIO.bar, AUDIO.chiusura], {
+    avviaPlaylist([AUDIO.bar, AUDIO.chiusura], {
       titolo:"Storia sociale del bar",
       menuPrecedente:"principale",
       memorizzaStoria:true
