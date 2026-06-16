@@ -181,9 +181,43 @@ function pausaRiprendi() {
   else { player.pause(); aggiornaStato("Audio in pausa"); }
 }
 function tornaIndietro() {
-  if (modalita === "finestraIstruzioni") { avviaIstruzioni(); return; }
-  if (modalita === "riproduzione") { player.pause(); mostraMenu(menuPrecedente || "principale"); return; }
-  if (modalita === "menu" && menuCorrente === "fineStoria") { terminaEsperienza(); return; }
+  if (modalita === "finestraIstruzioni") {
+    avviaIstruzioni();
+    return;
+  }
+
+  if (modalita === "riproduzione") {
+    player.pause();
+
+    if (menuPrecedente === "principale") {
+      playFile(AUDIO.menuPrincipaleAudio, "Menù cinema, panetteria e bar", {
+        modalita: "audioMenuPrincipale",
+        sottotitolo: "Al termine potrai scegliere usando i quattro angoli dello schermo."
+      });
+      return;
+    }
+
+    if (menuPrecedente === "castelloMedico") {
+      playFile(AUDIO.menuCastelloMedico, "Menù castello e medico", {
+        modalita: "audioMenuAltre2",
+        sottotitolo: "Al termine potrai scegliere usando i quattro angoli dello schermo."
+      });
+      return;
+    }
+
+    if (menuPrecedente === "trenoPizzeria") {
+      playFile(AUDIO.menuTrenoPizzeria, "Menù treno e pizzeria", {
+        modalita: "audioMenuAltre1",
+        sottotitolo: "Al termine potrai scegliere usando i quattro angoli dello schermo."
+      });
+      return;
+    }
+  }
+
+  if (modalita === "menu" && menuCorrente === "fineStoria") {
+    terminaEsperienza();
+    return;
+  }
 }
 function vaiVersoFineAudio() {
   if (!player.src || isNaN(player.duration) || !isFinite(player.duration)) return;
