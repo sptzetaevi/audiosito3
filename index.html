@@ -221,8 +221,13 @@ function tornaIndietro() {
 }
 function vaiVersoFineAudio() {
   if (!player.src || isNaN(player.duration) || !isFinite(player.duration)) return;
-  player.currentTime = Math.max(0, player.duration - 0.4);
-  aggiornaStato("Vai verso la fine dell'audio");
+
+  player.currentTime = Math.min(
+    player.duration - 0.1,
+    player.currentTime + 10
+  );
+
+  aggiornaStato("Avanti veloce di 10 secondi");
 }
 function terminaEsperienza() { player.pause(); nascondiMenu(); nascondiAvvio(); modalita = "terminata"; scrivi("Esperienza terminata", "Puoi chiudere questa pagina."); aggiornaStato(""); }
 function gestisciSequenzaClick(numeroClick) { if (numeroClick === 1) pausaRiprendi(); else if (numeroClick === 2) tornaIndietro(); else if (numeroClick >= 3) vaiVersoFineAudio(); }
