@@ -30,7 +30,7 @@
 const AUDIO = {
   introduzione: "introduzione.mp3",
   istruzioni: "istruzioni.mp3",
-  menuPrincipaleAudio: "storie panetteria,pizzeria,bar.mp3",
+  menuPrincipaleAudio: "cinema,panetteria e bar_menu.mp3",
   menuTrenoPizzeria: "treno e pizzeria_menu.mp3",
   menuCastelloMedico: "castello e medico_menu.mp3",
   introStoria: "intro_storiasociale.mp3",
@@ -104,7 +104,7 @@ function apriFinestraIstruzioni() {
   timerFinestraIstruzioni = setTimeout(()=>{
     if (!finestraIstruzioniAttiva) return;
     finestraIstruzioniAttiva = false; testo.classList.remove("lampeggia");
-    playFile(AUDIO.menuPrincipaleAudio, "Menù cinema, panetteria, pizzeria e bar", { modalita:"audioMenuPrincipale", sottotitolo:"Al termine potrai scegliere usando i quattro angoli dello schermo." });
+    playFile(AUDIO.menuPrincipaleAudio, "Menù cinema, panetteria e bar", { modalita:"audioMenuPrincipale", sottotitolo:"Al termine potrai scegliere usando i quattro angoli dello schermo." });
   }, 3000);
 }
 
@@ -114,32 +114,53 @@ function avviaIstruzioni() {
 }
 
 function mostraMenu(nomeMenu) {
-  modalita = "menu"; menuCorrente = nomeMenu; nascondiAvvio(); document.body.classList.add("menu"); testo.classList.remove("lampeggia");
+  modalita = "menu";
+  menuCorrente = nomeMenu;
+  nascondiAvvio();
+  document.body.classList.add("menu");
+  testo.classList.remove("lampeggia");
+
   if (nomeMenu === "principale") {
-    scrivi("Scegli una storia sociale", "Usa i quattro angoli dello schermo.");
-    altoSinistra.textContent = "Cinema"; altoDestra.textContent = "Panetteria"; bassoDestra.textContent = "Bar"; bassoSinistra.textContent = "Altre storie";
+    scrivi("Prime proposte", "Cinema, panetteria, bar oppure altre proposte.");
+    altoSinistra.textContent = "Cinema";
+    altoDestra.textContent = "Panetteria";
+    bassoDestra.textContent = "Bar";
+    bassoSinistra.textContent = "Altre proposte";
   }
-  if (nomeMenu === "altre1") {
-    scrivi("Altre storie sociali", "Usa i quattro angoli dello schermo.");
-    altoSinistra.textContent = "Pizzeria"; altoDestra.textContent = "Treno"; bassoDestra.textContent = "Torna al menù principale"; bassoSinistra.textContent = "Castello e medico";
+
+  if (nomeMenu === "castelloMedico") {
+    scrivi("Castello e medico", "Scegli una storia oppure passa ad altre proposte.");
+    altoSinistra.textContent = "Castello";
+    altoDestra.textContent = "Medico";
+    bassoDestra.textContent = "Altre proposte";
+    bassoSinistra.textContent = "Torna alle prime proposte";
   }
-  if (nomeMenu === "altre2") {
-    scrivi("Altre storie sociali", "Usa i quattro angoli dello schermo.");
-    altoSinistra.textContent = "Castello"; altoDestra.textContent = "Medico"; bassoDestra.textContent = "Torna al menù precedente"; bassoSinistra.textContent = "Torna al menù principale";
+
+  if (nomeMenu === "trenoPizzeria") {
+    scrivi("Treno e pizzeria", "Scegli una storia oppure torna alle proposte precedenti.");
+    altoSinistra.textContent = "Treno";
+    altoDestra.textContent = "Pizzeria";
+    bassoDestra.textContent = "Torna alle proposte precedenti";
+    bassoSinistra.textContent = "Torna alle prime proposte";
   }
+
   if (nomeMenu === "fineStoria") {
     scrivi("La storia sociale è terminata", "Scegli cosa fare. Doppio clic: termina l’esperienza.");
-    altoSinistra.textContent = "Menù principale"; altoDestra.textContent = "Altre storie"; bassoDestra.textContent = "Torna al menù precedente"; bassoSinistra.textContent = "Riascolta questa storia";
+    altoSinistra.textContent = "Prime proposte";
+    altoDestra.textContent = "Castello e medico";
+    bassoDestra.textContent = "Torna al menù precedente";
+    bassoSinistra.textContent = "Riascolta questa storia";
   }
+
   aggiornaStato("Menù attivo: " + nomeMenu);
 }
 
 player.addEventListener("ended", () => {
   if (modalita === "introduzione") { apriFinestraIstruzioni(); return; }
-  if (modalita === "istruzioni") { playFile(AUDIO.menuPrincipaleAudio, "Menù cinema, panetteria, pizzeria e bar", { modalita:"audioMenuPrincipale", sottotitolo:"Al termine potrai scegliere usando i quattro angoli dello schermo." }); return; }
+  if (modalita === "istruzioni") { playFile(AUDIO.menuPrincipaleAudio, "Menù cinema, panetteria e bar", { modalita:"audioMenuPrincipale", sottotitolo:"Al termine potrai scegliere usando i quattro angoli dello schermo." }); return; }
   if (modalita === "audioMenuPrincipale") { mostraMenu("principale"); return; }
-  if (modalita === "audioMenuAltre1") { mostraMenu("altre1"); return; }
-  if (modalita === "audioMenuAltre2") { mostraMenu("altre2"); return; }
+  if (modalita === "audioMenuAltre1") { mostraMenu("trenoPizzeria"); return; }
+  if (modalita === "audioMenuAltre2") { mostraMenu("castelloMedico"); return; }
   if (modalita === "riproduzione") {
     indice++;
     if (indice < playlist.length) { riproduciAudioCorrente(); return; }
@@ -187,34 +208,147 @@ avvio.addEventListener("click", (evento) => {
 
 altoSinistra.addEventListener("click", (evento) => {
   evento.stopPropagation();
-  if (menuCorrente === "principale") { avviaPlaylist([AUDIO.introStoria, AUDIO.cinema, AUDIO.chiusura], { titolo:"Storia sociale del cinema", menuPrecedente:"principale", memorizzaStoria:true }); return; }
-  if (menuCorrente === "altre1") { avviaPlaylist([AUDIO.introStoria, AUDIO.pizzeria, AUDIO.chiusura], { titolo:"Storia sociale della pizzeria", menuPrecedente:"altre1", memorizzaStoria:true }); return; }
-  if (menuCorrente === "altre2") { avviaPlaylist([AUDIO.introStoria, AUDIO.castello, AUDIO.chiusura], { titolo:"Storia sociale del castello", menuPrecedente:"altre2", memorizzaStoria:true }); return; }
-  if (menuCorrente === "fineStoria") playFile(AUDIO.menuPrincipaleAudio, "Menù cinema, panetteria, pizzeria e bar", { modalita:"audioMenuPrincipale", sottotitolo:"Al termine potrai scegliere usando i quattro angoli dello schermo." });
+
+  if (menuCorrente === "principale") {
+    avviaPlaylist([AUDIO.introStoria, AUDIO.cinema, AUDIO.chiusura], {
+      titolo:"Storia sociale del cinema",
+      menuPrecedente:"principale",
+      memorizzaStoria:true
+    });
+    return;
+  }
+
+  if (menuCorrente === "castelloMedico") {
+    avviaPlaylist([AUDIO.introStoria, AUDIO.castello, AUDIO.chiusura], {
+      titolo:"Storia sociale del castello",
+      menuPrecedente:"castelloMedico",
+      memorizzaStoria:true
+    });
+    return;
+  }
+
+  if (menuCorrente === "trenoPizzeria") {
+    avviaPlaylist([AUDIO.introStoria, AUDIO.treno, AUDIO.chiusura], {
+      titolo:"Storia sociale del treno",
+      menuPrecedente:"trenoPizzeria",
+      memorizzaStoria:true
+    });
+    return;
+  }
+
+  if (menuCorrente === "fineStoria") {
+    playFile(AUDIO.menuPrincipaleAudio, "Prime proposte: cinema, panetteria e bar", {
+      modalita:"audioMenuPrincipale",
+      sottotitolo:"Al termine potrai scegliere usando i quattro angoli dello schermo."
+    });
+  }
 });
 
 altoDestra.addEventListener("click", (evento) => {
   evento.stopPropagation();
-  if (menuCorrente === "principale") { avviaPlaylist([AUDIO.introStoria, AUDIO.panetteria, AUDIO.chiusura], { titolo:"Storia sociale della panetteria", menuPrecedente:"principale", memorizzaStoria:true }); return; }
-  if (menuCorrente === "altre1") { avviaPlaylist([AUDIO.introStoria, AUDIO.treno, AUDIO.chiusura], { titolo:"Storia sociale del treno", menuPrecedente:"altre1", memorizzaStoria:true }); return; }
-  if (menuCorrente === "altre2") { avviaPlaylist([AUDIO.introStoria, AUDIO.medico, AUDIO.chiusura], { titolo:"Storia sociale del medico", menuPrecedente:"altre2", memorizzaStoria:true }); return; }
-  if (menuCorrente === "fineStoria") playFile(AUDIO.menuTrenoPizzeria, "Menù pizzeria e treno", { modalita:"audioMenuAltre1", sottotitolo:"Al termine potrai scegliere usando i quattro angoli dello schermo." });
+
+  if (menuCorrente === "principale") {
+    avviaPlaylist([AUDIO.introStoria, AUDIO.panetteria, AUDIO.chiusura], {
+      titolo:"Storia sociale della panetteria",
+      menuPrecedente:"principale",
+      memorizzaStoria:true
+    });
+    return;
+  }
+
+  if (menuCorrente === "castelloMedico") {
+    avviaPlaylist([AUDIO.introStoria, AUDIO.medico, AUDIO.chiusura], {
+      titolo:"Storia sociale del medico",
+      menuPrecedente:"castelloMedico",
+      memorizzaStoria:true
+    });
+    return;
+  }
+
+  if (menuCorrente === "trenoPizzeria") {
+    avviaPlaylist([AUDIO.introStoria, AUDIO.pizzeria, AUDIO.chiusura], {
+      titolo:"Storia sociale della pizzeria",
+      menuPrecedente:"trenoPizzeria",
+      memorizzaStoria:true
+    });
+    return;
+  }
+
+  if (menuCorrente === "fineStoria") {
+    playFile(AUDIO.menuCastelloMedico, "Proposte: castello e medico", {
+      modalita:"audioMenuAltre2",
+      sottotitolo:"Al termine potrai scegliere usando i quattro angoli dello schermo."
+    });
+  }
 });
 
 bassoDestra.addEventListener("click", (evento) => {
   evento.stopPropagation();
-  if (menuCorrente === "principale") { avviaPlaylist([AUDIO.introStoria, AUDIO.bar, AUDIO.chiusura], { titolo:"Storia sociale del bar", menuPrecedente:"principale", memorizzaStoria:true }); return; }
-  if (menuCorrente === "altre1") { playFile(AUDIO.menuPrincipaleAudio, "Menù cinema, panetteria, pizzeria e bar", { modalita:"audioMenuPrincipale", sottotitolo:"Al termine potrai scegliere usando i quattro angoli dello schermo." }); return; }
-  if (menuCorrente === "altre2") { playFile(AUDIO.menuTrenoPizzeria, "Menù pizzeria e treno", { modalita:"audioMenuAltre1", sottotitolo:"Al termine potrai scegliere usando i quattro angoli dello schermo." }); return; }
-  if (menuCorrente === "fineStoria") mostraMenu(menuPrecedente || "principale");
+
+  if (menuCorrente === "principale") {
+    avviaPlaylist([AUDIO.introStoria, AUDIO.bar, AUDIO.chiusura], {
+      titolo:"Storia sociale del bar",
+      menuPrecedente:"principale",
+      memorizzaStoria:true
+    });
+    return;
+  }
+
+  if (menuCorrente === "castelloMedico") {
+    playFile(AUDIO.menuTrenoPizzeria, "Altre proposte: treno e pizzeria", {
+      modalita:"audioMenuAltre1",
+      sottotitolo:"Al termine potrai scegliere usando i quattro angoli dello schermo."
+    });
+    return;
+  }
+
+  if (menuCorrente === "trenoPizzeria") {
+    playFile(AUDIO.menuCastelloMedico, "Proposte precedenti: castello e medico", {
+      modalita:"audioMenuAltre2",
+      sottotitolo:"Al termine potrai scegliere usando i quattro angoli dello schermo."
+    });
+    return;
+  }
+
+  if (menuCorrente === "fineStoria") {
+    mostraMenu(menuPrecedente || "principale");
+  }
 });
 
 bassoSinistra.addEventListener("click", (evento) => {
   evento.stopPropagation();
-  if (menuCorrente === "principale") { playFile(AUDIO.menuTrenoPizzeria, "Menù pizzeria e treno", { modalita:"audioMenuAltre1", sottotitolo:"Al termine potrai scegliere usando i quattro angoli dello schermo." }); return; }
-  if (menuCorrente === "altre1") { playFile(AUDIO.menuCastelloMedico, "Menù castello e medico", { modalita:"audioMenuAltre2", sottotitolo:"Al termine potrai scegliere usando i quattro angoli dello schermo." }); return; }
-  if (menuCorrente === "altre2") { playFile(AUDIO.menuPrincipaleAudio, "Menù cinema, panetteria, pizzeria e bar", { modalita:"audioMenuPrincipale", sottotitolo:"Al termine potrai scegliere usando i quattro angoli dello schermo." }); return; }
-  if (menuCorrente === "fineStoria" && ultimaStoria) avviaPlaylist(ultimaStoria, { titolo:"Riascolto della storia sociale", menuPrecedente: menuPrecedente || "principale", memorizzaStoria:true });
+
+  if (menuCorrente === "principale") {
+    playFile(AUDIO.menuCastelloMedico, "Altre proposte: castello e medico", {
+      modalita:"audioMenuAltre2",
+      sottotitolo:"Al termine potrai scegliere usando i quattro angoli dello schermo."
+    });
+    return;
+  }
+
+  if (menuCorrente === "castelloMedico") {
+    playFile(AUDIO.menuPrincipaleAudio, "Prime proposte: cinema, panetteria e bar", {
+      modalita:"audioMenuPrincipale",
+      sottotitolo:"Al termine potrai scegliere usando i quattro angoli dello schermo."
+    });
+    return;
+  }
+
+  if (menuCorrente === "trenoPizzeria") {
+    playFile(AUDIO.menuPrincipaleAudio, "Prime proposte: cinema, panetteria e bar", {
+      modalita:"audioMenuPrincipale",
+      sottotitolo:"Al termine potrai scegliere usando i quattro angoli dello schermo."
+    });
+    return;
+  }
+
+  if (menuCorrente === "fineStoria" && ultimaStoria) {
+    avviaPlaylist(ultimaStoria, {
+      titolo:"Riascolto della storia sociale",
+      menuPrecedente: menuPrecedente || "principale",
+      memorizzaStoria:true
+    });
+  }
 });
 </script>
 </body>
